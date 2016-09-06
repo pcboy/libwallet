@@ -17,9 +17,13 @@
 #
 # David Hagege <pcboy.pebkac@gmail.com>
 
+set -euo pipefail
+
+pushd `dirname $0`
+
 if [[ ! -d crystax-ndk-10.3.2/ ]];then
-  wget -c https://dl.crystax.net/builds/903/linux/crystax-ndk-10.3.2-b903-linux-x86_64.tar.xz
-  tar xvf crystax-ndk-10.3.2-linux-x86_64.tar.xz -C ./crystax-ndk-10.3.2/
+  wget -c https://us.crystax.net/download/crystax-ndk-10.3.2-linux-x86_64.tar.xz
+  tar xvf crystax-ndk-10.3.2-linux-x86_64.tar.xz 
 fi
 
 export NDK=`pwd`/crystax-ndk-10.3.2/
@@ -31,8 +35,10 @@ fi
 
 # build toolchain
 export TOOLCHAIN_DIR=`pwd`/android-toolchain
-$NDK/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$TOOLCHAIN_DIR
-cp -rf $NDK/sources/boost/*/include/boost/ $TOOLCHAIN_DIR/sysroot/usr/include/
+if [[ ! -d $TOOLCHAIN_DIR ]];then
+  $NDK/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$TOOLCHAIN_DIR
+  cp -rf $NDK/sources/boost/*/include/boost/ $TOOLCHAIN_DIR/sysroot/usr/include/
+fi
 
 # Get monero
 if [[ ! -d ./monero ]];then
@@ -46,6 +52,7 @@ fi
 
 pushd monero/src/
 
-cmake -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a  -DCMAKE_CXX_FLAGS="-std=c++11 -L$NDK/sources/crystax/libs/armeabi-v7a/ -l$NDK/sources/crystax/libs/armeabi-v7a/libcrystax.so -I`pwd`/../contrib/epee/include/ -I`pwd` -I`pwd`/../external/ -I`pwd`/common/ -I`pwd`/../external/db_drivers/liblmdb/  -DDEFAULT_DB_TYPE='\"lmdb\"' -DPER_BLOCK_CHECKPOINT" -DCMAKE_C_FLAGS="-std=gnu11 -I`pwd` -I`pwd`/../contrib/epee/include" -DBUILD_WITH_STANDALONE_TOOLCHAIN=ON -DPER_BLOCK_CHECKPOINT=ON -DANDROID_STANDALONE_TOOLCHAIN=$TOOLCHAIN_DIR
+cmake -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a  -DCMAKE_CXX_FLAGS="-std=c++11 -L$NDK/sources/crystax/libs/armeabi-v7a/ -l$NDK/sources/crystax/libs/armeabi-v7a/libcrystax.so -I`pwd`/../contrib/epee/include/ -I`pwd` -I`pwd`/../external/ -I`pwd`/common/ -I`pwd`/../external/db_drivers/liblmdb/  -DDEFAULT_DB_TYPE='\"lmdb\"' -DPER_BLOCK_CHECKPOINT" -DCMAKE_C_FLAGS="-std=gnu11 -I`pwd` -I`pwd`/../contrib/epee/include" -DBUILD_WITH_STANDALONE_TOOLCHAIN=ON -DPER_BLOCK_CHECKPOINT=ON -DANDROID_STANDALONE_TOOLCHAIN=$TOOLCHAIN_DIR || true
 make wallet
+popd
 popd
