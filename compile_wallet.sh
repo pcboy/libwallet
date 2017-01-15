@@ -40,7 +40,7 @@ fi
 
 # Get monero
 if [[ ! -d ./monero ]];then
-  git clone --depth=1 git@github.com:monero-project/monero.git
+  git clone --branch=v0.10.0 --depth=1 git@github.com:monero-project/monero.git
   sed -i '1 i\#include <sys/endian.h>' monero/src/common/int-util.h
   sed -i 's/dns_utils.cpp//' monero/src/common/CMakeLists.txt
   sed -i '1 i\cmake_minimum_required(VERSION 3.5)' monero/src/CMakeLists.txt
@@ -48,9 +48,14 @@ if [[ ! -d ./monero ]];then
   patch monero/src/common/int-util.h int-util.h.patch
 fi
 
-pushd monero/src/
+pushd monero/
+cmake .
+make version
 
-cmake -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a  -DCMAKE_CXX_FLAGS="-std=c++11 -L$NDK/sources/crystax/libs/armeabi-v7a/ -l$NDK/sources/crystax/libs/armeabi-v7a/libcrystax.so -I`pwd`/../contrib/epee/include/ -I`pwd` -I`pwd`/../external/ -I`pwd`/common/ -I`pwd`/../external/db_drivers/liblmdb/  -DDEFAULT_DB_TYPE='\"lmdb\"' -DPER_BLOCK_CHECKPOINT" -DCMAKE_C_FLAGS="-std=gnu11 -I`pwd` -I`pwd`/../contrib/epee/include" -DBUILD_WITH_STANDALONE_TOOLCHAIN=ON -DPER_BLOCK_CHECKPOINT=ON -DANDROID_STANDALONE_TOOLCHAIN=$TOOLCHAIN_DIR || true
+pushd src/
+
+cmake -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID=true -DANDROID_ABI=armeabi-v7a  -DCMAKE_CXX_FLAGS="-std=c++11 -L$NDK/sources/crystax/libs/armeabi-v7a/ -l$NDK/sources/crystax/libs/armeabi-v7a/libcrystax.so -I`pwd`/../contrib/epee/include/ -I`pwd` -I`pwd`/../external/ -I`pwd`/common/ -I`pwd`/../external/db_drivers/liblmdb/  -DDEFAULT_DB_TYPE='\"lmdb\"' -DPER_BLOCK_CHECKPOINT" -DCMAKE_C_FLAGS="-std=gnu11 -I`pwd` -I`pwd`/../contrib/epee/include" -DBUILD_WITH_STANDALONE_TOOLCHAIN=ON -DPER_BLOCK_CHECKPOINT=ON -DANDROID_STANDALONE_TOOLCHAIN=$TOOLCHAIN_DIR || true
 make wallet
+popd
 popd
 popd
